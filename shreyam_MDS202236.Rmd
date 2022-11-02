@@ -1,0 +1,399 @@
+---
+title: "A report on 'Who eats the food we grow?"
+author: "Shreyam Banerjee     MDS202236"
+date: ""
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Abstract 
+
+
+The Basic idea of this report is to understand that the tonnes of food grown each year is consumed by the rest of the world  in what way. In this project we study some of our daily houeshold items and their consumption by the major countries in the world and then compare their consumpotion.
+
+
+
+# About the dataset 
+
+This dataset was meticulously gathered, organized and published by the Food and Agriculture Organization of the United Nations. This chunk of the dataset is focused on two utilization of each food item available:
+
+Food - refers to the total amount of the food item available as human food
+Feed - refers to the quantity of the food item available for feeding to the livestock and poultry
+during the reference period.
+
+
+# Variable Description 
+```{r}
+Variable = c("Area Abbreviation" , "Area Code" , "Area" , "Item Code" ,
+             "Item" , "Element code" , "Element" , "Unit" , "Latitude" , "Longitude",
+             "Year" , "Amount")
+
+Type_of_variable = c("Nominal" , "Nominal" , "Nominal" , "Nominal" , "Nominal",
+                     "Nominal" , "Nominal" , "Nominal" , "Continuous", "Continuous", 
+                     "Ordinal" , "Count")
+
+Description = c("Abbreviation for country name",
+                "Unique code for each country" , 
+                "Name of the Country" , 
+                " Food item code" , 
+                "Food Item"," Food or Feed code", "Food or Feed",
+                "Unit of Measurement" , 
+                "Latitude", "Longitude", "Year since 1961 to 2013" ,
+                "Amount of Food or Feed for each year")
+
+df = data.frame(Variable, Type_of_variable ,Description )
+library(knitr)
+knitr::kable(df,
+             caption = "Variable Description")
+```
+
+
+## Reading the data
+
+```{r}
+data = read.csv("/Users/shreyambanerjee/FAO.csv", header = T)
+```
+
+Let's try to know which are the most popular food across the globe, we will extract 20 most popularfood items.
+
+```{r}
+head(sort(table(data$Item), rev(T)), 10)
+```
+Now let's observe the least popular too
+
+```{r}
+tail(sort(table(data$Item), rev(T)), 10)
+```
+
+# Items under consideration
+As a part of study we  will only consider 2 out of top 10 most popular food items across the globe.
+
+
+- Eggs
+- Animal Fat
+
+In addition, we  will also look into the meat  items namely Pig meat and Poultry Meat
+
+
+
+## Eggs
+
+### Data Extraction
+```{r}
+eggs = data[data$Item == "Eggs" & data$Item.Code == "2744", ]
+
+eggs_2013_food = eggs[eggs$Element == "Food", c(1, 63)]
+
+eggs_2013_feed = eggs[eggs$Element == "Feed", c(1, 63)]
+
+```
+
+Let's first explore the consumption of eggs in year 2013 for the top 20 countries
+
+```{r}
+top_consumer_eggs_food = head(eggs_2013_food[order(eggs_2013_food$Y2013, 
+                                                   decreasing = T), ],20)
+top_consumer_eggs_feed = head(eggs_2013_feed[order(eggs_2013_feed$Y2013, 
+                                                   decreasing = T), ],20)
+
+```
+
+### Plotting top 20 Egg consumer
+
+```{r}
+library(ggplot2)
+ggplot(data = top_consumer_eggs_food, 
+       aes(x = reorder(top_consumer_eggs_food[,1], -top_consumer_eggs_food[,2]),
+           (top_consumer_eggs_food[,2]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "red") +  
+  ggtitle("Top 20 Egg Consumers ")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+```
+
+### Top 20 Egg feeding Country
+
+```{r}
+ggplot(data = top_consumer_eggs_feed, 
+       aes(x = reorder(top_consumer_eggs_feed[,1], -top_consumer_eggs_feed[,2]),
+           (top_consumer_eggs_feed[,2]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "red") +
+  ggtitle("Top 20 Egg Feeder")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+```
+
+
+From the above plots we can conclude that China is the major consumer of eggs and there are only 6 countries in the world which feeds egg to animals
+
+Now let's try to find the trend of egg consumption for top 5 countries, from year 1961 to 2013
+
+```{r}
+year = seq(1961, 2013 , 1)
+egg_food_IND = eggs[eggs$Area.Abbreviation == "IND" & eggs$Element == "Food" , 
+                    c(11:63) ]
+egg_food_JPN = eggs[eggs$Area.Abbreviation == "JPN" & eggs$Element == "Food" , 
+                    c(11:63) ]
+egg_food_USA = eggs[eggs$Area.Abbreviation == "USA" & eggs$Element == "Food" , 
+                    c(11:63) ]
+egg_food_CHN = eggs[eggs$Area.Abbreviation == "CHN" & eggs$Element == "Food" 
+                    & eggs$Area.Code == 41 , c(11:63) ]
+egg_food_MEX = eggs[eggs$Area.Abbreviation == "MEX" & eggs$Element == "Food" , 
+                    c(11:63) ]
+
+plot(year, egg_food_CHN, type = "l" , col = "Red" , 
+     main = "Egg consumption trend: Top 5 country", xlab = "Year" ,  
+     ylab = "Amount (1000 tonnes)" , ylim = c(0, 28000) )
+lines(year, egg_food_JPN, col = "Green")
+lines(year, egg_food_USA, col = "Blue")
+lines(year, egg_food_IND, col = "Yellow")
+lines(year, egg_food_MEX, col = "Pink")
+
+legend(x = "topleft",
+  legend = c("CHN", "JPN", "USA","IND", "MEX"),
+  fill = c("red", "Green","blue", "Yellow", "pink")
+   )
+```
+
+
+Form the above plot we can say
+- Consumption of Egg in China increased abruptly and intensely after 1980
+- In all other country in-spite of increase in population increased is consumption is not significant
+
+
+## Animal Fat
+### Data Extraction
+```{r}
+
+ 
+
+Animal_Fat = data[data$Item == "Animal fats" & data$Item.Code == "2946", ]
+
+Animal_Fat_2013_food = Animal_Fat[Animal_Fat$Element == "Food", c(1, 63)]
+
+Animal_Fat_2013_feed = Animal_Fat[Animal_Fat$Element == "Feed", c(1, 63)]
+
+```
+
+We will again observe the data of top 20 countries
+
+```{r}
+top_consumer_Animal_Fat_food = head(Animal_Fat_2013_food
+                                    [order(Animal_Fat_2013_food$Y2013, 
+                                           decreasing = T), ],20)
+top_consumer_Animal_Fat_feed = head(Animal_Fat_2013_feed
+                                    [order(Animal_Fat_2013_feed$Y2013, 
+                                           decreasing = T), ],20)
+
+```
+
+### Plotting top 20 Animal Fat consumer 
+
+```{r}
+library(ggplot2)
+ggplot(data = top_consumer_Animal_Fat_food, 
+       aes(x = reorder(top_consumer_Animal_Fat_food[,1],
+                       -top_consumer_Animal_Fat_food[,2]),
+           (top_consumer_Animal_Fat_food[,2]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "red") +  
+  ggtitle("Top 20 Animal Fat Consumers ")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+```
+
+### Top 20 Animal Fat feeder in the world
+
+```{r}
+ggplot(data = top_consumer_Animal_Fat_feed, 
+       aes(x = reorder(top_consumer_Animal_Fat_feed[,1], -top_consumer_Animal_Fat_feed[,2]),
+           (top_consumer_Animal_Fat_feed[,2]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "red") +
+  ggtitle("Top 20 Animal Fat Feeder")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+```
+From the above plots we can conclude that India is the major consumer and USA is top on feeding animal fats to animals  of 
+
+Now let's try to find the trend of animal fat consumption for top 5 countries, from year 1961 to 2013
+
+```{r}
+Animal_Fat_food_IND = Animal_Fat[Animal_Fat$Area.Abbreviation == "IND" & 
+                                   Animal_Fat$Element == "Food" , c(11:63) ]
+Animal_Fat_food_DEU = Animal_Fat[Animal_Fat$Area.Abbreviation == "DEU" & 
+                                   Animal_Fat$Element == "Food" , c(11:63) ]
+Animal_Fat_food_USA = Animal_Fat[Animal_Fat$Area.Abbreviation == "USA" & 
+                                   Animal_Fat$Element == "Food" , c(11:63) ]
+Animal_Fat_food_CHN = Animal_Fat[Animal_Fat$Area.Abbreviation == "CHN" & 
+                                   Animal_Fat$Element == "Food" &
+                                   Animal_Fat$Area.Code == 41 , c(11:63) ]
+Animal_Fat_food_RUS = Animal_Fat[Animal_Fat$Area.Abbreviation == "RUS" & 
+                                   Animal_Fat$Element == "Food" , c(11:63) ]
+
+plot(year, Animal_Fat_food_IND, type = "l" , col = "Red" , 
+     main = "Animal Fat consumption trend: Top 5 country", xlab = "Year" ,  
+     ylab = "Amount (1000 tonnes)" )
+lines(year, Animal_Fat_food_DEU, col = "Green" )
+lines(year, Animal_Fat_food_USA, col = "Blue" )
+lines(year, Animal_Fat_food_CHN, col = "Yellow")
+lines(year, Animal_Fat_food_RUS, col = "Pink" )
+
+legend(x = "topleft",
+  legend = c("IND", "DEU", "USA","CHN", "RUS"),
+  fill = c("red", "Green","blue", "Yellow", "pink")
+   )
+```
+
+
+
+## Pig Meat 
+
+### Data Extraction
+```{r}
+
+Pig_Meat = data[data$Item == "Pigmeat" & data$Item.Code == "2733", ]
+
+Pig_Meat_2013_food = Pig_Meat[Pig_Meat$Element == "Food", c(1, 63)]
+
+Pig_Meat_2013_feed = Pig_Meat[Pig_Meat$Element == "Feed", c(1, 63)]
+```
+
+### Top 20 countries
+
+```{r}
+top_consumer_Pig_Meat_food = head(Pig_Meat_2013_food
+                                  [order(Pig_Meat_2013_food$Y2013, decreasing = T), ],20)
+top_consumer_Pig_Meat_feed = head(Pig_Meat_2013_feed
+                                  [order(Pig_Meat_2013_feed$Y2013, decreasing = T), ],20)
+
+```
+
+### Plotting top 20 Pigmeat consumer 
+
+```{r}
+library(ggplot2)
+ggplot(data = top_consumer_Pig_Meat_food, 
+       aes(x = reorder(top_consumer_Pig_Meat_food[,1], -top_consumer_Pig_Meat_food[,2]),
+           (top_consumer_Pig_Meat_food[,2]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "red") +  
+  ggtitle("Top 20 Pigmeat Consumers ")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+```
+
+```{r}
+dim(top_consumer_Pig_Meat_feed)
+```
+So,there are no country who feed pig meat. Now we will move on to find the trend of egg consumption for top 5 countries, from year 1961 to 2013
+
+```{r}
+Pig_Meat_food_RUS = Pig_Meat[Pig_Meat$Area.Abbreviation == "RUS" 
+                             & Pig_Meat$Element == "Food" , c(11:63) ]
+Pig_Meat_food_VNM = Pig_Meat[Pig_Meat$Area.Abbreviation == "VNM" 
+                             & Pig_Meat$Element == "Food" , c(11:63) ]
+Pig_Meat_food_USA = Pig_Meat[Pig_Meat$Area.Abbreviation == "USA" 
+                             & Pig_Meat$Element == "Food" , c(11:63) ]
+Pig_Meat_food_CHN = Pig_Meat[Pig_Meat$Area.Abbreviation == "CHN"
+                             & Pig_Meat$Element == "Food" 
+                             & Pig_Meat$Area.Code == 41 , c(11:63) ]
+Pig_Meat_food_DEU = Pig_Meat[Pig_Meat$Area.Abbreviation == "DEU" 
+                             & Pig_Meat$Element == "Food" , c(11:63) ]
+plot(year, Pig_Meat_food_CHN, type = "l" , 
+     col = "Red",  
+     main ="Pig Meat consumption trend: Top 5 country", xlab = "Year" ,  
+     ylab = "Amount (1000 tonnes)", ylim = c(0, 55000))
+lines(year, Pig_Meat_food_DEU, col = "Green")
+lines(year, Pig_Meat_food_USA, col = "Blue")
+lines(year, Pig_Meat_food_RUS, col = "Yellow")
+lines(year, Pig_Meat_food_VNM, col = "Pink")
+
+legend(x = "topleft",
+  legend = c("CHN", "DEU", "USA","RUS", "VNM"),
+  fill = c("red", "Green","blue", "Yellow", "pink")
+   )
+```
+Form the above plot we can say
+- Consumption of Pig_Meat in China has the same pattern eggs, fish and beef
+- In all other country in-spite of increase in population increased is consumption is not significant
+
+## Poultry Meat
+
+### Extracting Data
+```{r}
+
+
+Poultry_Meat = data[data$Item == "Poultry Meat" & data$Item.Code == "2734", ]
+
+Poultry_Meat_2013_food = Poultry_Meat[Poultry_Meat$Element == "Food", c(1, 63)]
+
+Poultry_Meat_2013_feed = Poultry_Meat[Poultry_Meat$Element == "Feed", c(1, 63)]
+```
+
+### Top 20 country
+
+```{r}
+top_consumer_Poultry_Meat_food = head(Poultry_Meat_2013_food
+                                      [order(Poultry_Meat_2013_food$Y2013, decreasing = T), ],20)
+top_consumer_Poultry_Meat_feed = head(Poultry_Meat_2013_feed
+                                      [order(Poultry_Meat_2013_feed$Y2013, decreasing = T), ],20)
+
+```
+
+### Plotting top 20 Poultry_Meat consumer 
+
+```{r}
+library(ggplot2)
+ggplot(data = top_consumer_Poultry_Meat_food, 
+       aes(x = reorder(top_consumer_Poultry_Meat_food[,1], -top_consumer_Poultry_Meat_food[,2]),
+           (top_consumer_Poultry_Meat_food[,2]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "red") +  
+  ggtitle("Top 20 Poultry Meat Consumers ")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+```
+Like Pig meat Poultry meat is also not fed to animals. 
+
+Now lets try to find the trend of Poultry Meat consumption for top 5 countries, from year 1961 to 2013
+
+
+
+```{r}
+Poultry_Meat_food_BRA = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "BRA" 
+                                     & Poultry_Meat$Element == "Food" , c(11:63) ]
+Poultry_Meat_food_RUS = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "RUS" 
+                                     & Poultry_Meat$Element == "Food" , c(11:63) ]
+Poultry_Meat_food_USA = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "USA" 
+                                     & Poultry_Meat$Element == "Food" , c(11:63) ]
+Poultry_Meat_food_CHN = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "CHN" 
+                                     & Poultry_Meat$Element == "Food" 
+                                     & Poultry_Meat$Area.Code == 41 , c(11:63) ]
+Poultry_Meat_food_MEX = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "MEX" 
+                                     & Poultry_Meat$Element == "Food" , c(11:63) ]
+plot(year, Poultry_Meat_food_CHN, type = "l" , col = "Red", lwd = 2 , 
+     main = "Poultry Meat consumption trend: Top 5 country", xlab = "Year" ,  
+     ylab = "Amount (1000 tonnes)" )
+lines(year, Poultry_Meat_food_RUS, col = "Green")
+lines(year, Poultry_Meat_food_USA, col = "Blue")
+lines(year, Poultry_Meat_food_BRA, col = "Yellow")
+lines(year, Poultry_Meat_food_MEX, col = "Pink")
+
+legend(x = "topleft",
+  legend = c("CHN", "RUS", "USA","BRA", "MEX"),
+  fill = c("red", "Green","blue", "Yellow", "pink")
+   )
+```
+Form the above plot we can say
+- Consumption of Poultry Meat in China has the same pattern as  eggs and  pig meat
+- Interestingly USA is also showing rapid growth in poultry meat consumption, seemingly more than it population growth rate
+
+
+
+From the above table it's clear that China, India, USA, Brazil and Russia dominate food market of these 4 items. 
+
+
+
+# Conclusion 
+
+To answer the question of feeding to such a huge and constantly growing population we first dived into the food  distribution pattern for different country across the globe. It was really interesting to find out that  China, India, USA, Brazil and Russia are the top 5 food consuming countries. Also, out of the 8 food items China leads in 5 of them, India leads in 2 and USA in 1. One may find summary of top five nation for each food item in the table below. 
+
+
+Interestingly, rate of increase of pig meat consumption has gained a much faster rate in China after 1980 and becomes almost 6 times of that consumed in USA, the second highest consumer. Similarly the popularity of Bovine meat in USA can be assumed from the fact that even after having 4 times lesser population than China it consumes 1.3 times more meat than that of China, which is the second highest consumer. 
+
+
